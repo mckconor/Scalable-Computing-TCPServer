@@ -30,19 +30,11 @@ public class Server {
 		ServerSocket welcomeSocket = new ServerSocket(6789);
 		
 		while(true) {
+			System.out.println("waiting...");
+			//Accepts connect, creates new ClientThread to handle connection
 			Socket conSocket = welcomeSocket.accept();
-			BufferedReader inFromClient = new BufferedReader(new InputStreamReader(conSocket.getInputStream()));			
-			DataOutputStream outToClient = new DataOutputStream(conSocket.getOutputStream());
-			
-			outToClient.writeBytes("Welcome! Please enter a room number to join: ");
-			
-			clientMessage= inFromClient.readLine();
-			
-			if(clientMessage.equals("1")){
-				serverResponse = 1;
-				outToClient.write(serverResponse);
-			}
-			
+			ClientThread x = new ClientThread(conSocket);
+			x.start();
 		}
 	}
 }

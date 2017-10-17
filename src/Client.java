@@ -15,22 +15,11 @@ public class Client {
 			  Socket clientSocket = new Socket("localhost", 6789);
 			  DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
 			  BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-			  
-			  if(!hasRoom){
-				  System.out.println(inFromServer.readLine());
-				  sentence = inFromUser.readLine();
-				  outToServer.writeBytes(sentence + '\n');
-				  
-				  int serverResponse = inFromServer.read();
-				  if(serverResponse == 1){
-					  hasRoom = true;
-				  }
-			  } else {
-				  sentence = inFromUser.readLine();
-				  outToServer.writeBytes(sentence + '\n');
-				  modifiedSentence = inFromServer.readLine();
-				  System.out.println("FROM SERVER: " + modifiedSentence);
-			  }
+
+			  sentence = inFromUser.readLine();
+			  outToServer.writeBytes(sentence + '\n');
+			  modifiedSentence = inFromServer.readLine();
+			  System.out.println("FROM SERVER: " + modifiedSentence);
 		  }
 	}
 }

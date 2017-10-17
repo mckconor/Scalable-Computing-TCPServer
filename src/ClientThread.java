@@ -7,17 +7,19 @@ import java.net.Socket;
 
 public class ClientThread extends Thread {
 
-	Socket socket;
+	protected Socket socket;
+	protected InputStream input;
+	protected BufferedReader bufferedReader;
+	protected DataOutputStream output;
 	
 	public ClientThread(Socket socket) {
 		this.socket = socket;
 	}
 	
 	public void run() { 
-		
-		InputStream input = null;
-		BufferedReader bufferedReader = null;
-		DataOutputStream output = null;
+		input = null;
+		bufferedReader = null;
+		output = null;
 		
 		try {
 			input = socket.getInputStream();
@@ -28,6 +30,9 @@ public class ClientThread extends Thread {
 		}
 		
 		String line;
+		
+		//Welcome Client
+		WelcomeClient();
 		
 		while(true) {
 			try {
@@ -47,6 +52,14 @@ public class ClientThread extends Thread {
 		}
 		
 		
+	}
+	
+	public void WelcomeClient () {
+		try {
+			output.writeBytes("Welcome!" + "\n\r");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 }
