@@ -43,6 +43,7 @@ public class ClientThread extends Thread {
 					return;
 				} else {
 					output.writeBytes(line + "\n\r");
+					System.out.println("FROM CLIENT: " + line);
 					output.flush();
 				}
 			} catch (IOException ex) {

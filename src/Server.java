@@ -30,7 +30,6 @@ public class Server {
 		ServerSocket welcomeSocket = new ServerSocket(6789);
 		
 		while(true) {
-			System.out.println("waiting...");
 			//Accepts connect, creates new ClientThread to handle connection
 			Socket conSocket = welcomeSocket.accept();
 			ClientThread x = new ClientThread(conSocket);

@@ -3,23 +3,27 @@ import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
-public class Client {
+public class Client{
 	public static void main(String argv[]) throws Exception {
 		  String sentence;
 		  String modifiedSentence;
 		  
-		  boolean hasRoom = false;
+		  Socket clientSocket = new Socket("localhost", 6789);
+
+		  BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+		  
+		  ServerListener serverListener = new ServerListener(inFromServer);
+		  serverListener.start();
+		  
+		  ClientListener clientListener = new ClientListener();
+		  clientListener.start();
 		  
 		  while(true){
-			  BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
-			  Socket clientSocket = new Socket("localhost", 6789);
 			  DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
-			  BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
-			  sentence = inFromUser.readLine();
-			  outToServer.writeBytes(sentence + '\n');
-			  modifiedSentence = inFromServer.readLine();
-			  System.out.println("FROM SERVER: " + modifiedSentence);
+			  
+			  String inputLine = clientListener.input.readLine();
+			  outToServer.writeBytes(inputLine);
+			  System.out.println(inputLine);
 		  }
 	}
 }
