@@ -8,7 +8,9 @@ public class Server {
 	private static final int NUMBER_OF_ROOMS = 1;
 	private static final int MAX_CLIENTS_PER_ROOM = 1;
 	
-	static List<Room> rooms;
+	private static int numberOfClients;
+	
+	public static List<Room> rooms;
 
 	public static void main(String[] args) throws IOException {
 		InitServer();
@@ -17,10 +19,6 @@ public class Server {
 	
 	public static void InitServer () {
 		rooms = new ArrayList<Room>();
-		for(int i = 0; i<NUMBER_OF_ROOMS; i++){
-			Room newRoom = new Room(i, MAX_CLIENTS_PER_ROOM);
-			rooms.add(newRoom);
-		}
 	}
 
 	public static void ServerFunctionality () throws IOException {
@@ -31,9 +29,20 @@ public class Server {
 		
 		while(true) {
 			//Accepts connect, creates new ClientThread to handle connection
-			Socket conSocket = welcomeSocket.accept();
-			ClientThread x = new ClientThread(conSocket);
+			Socket conSocket = welcomeSocket.accept(); //New Connection
+			ClientThread x = new ClientThread(conSocket, numberOfClients++);
 			x.start();
 		}
+	}
+	
+	public static void AddRoom (String roomName) {
+		System.out.println("Creating chatroom: " + roomName);
+		Room newRoom = new Room(roomName, 8);
+		rooms.add(newRoom);
+	}
+	
+	public static void AddClientToRoom (ClientThread client) {
+		
+		
 	}
 }

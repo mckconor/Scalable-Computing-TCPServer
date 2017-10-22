@@ -2,13 +2,17 @@ import java.util.List;
 
 public class Room {
 
-	int roomId;
+	String roomName;
 	int maxClients;
+	int roomId;
+	
+	String roomIpAddress;
+	int roomPort;
 	
 	List<Client> clients;
 		
-	public Room (int roomId, int maxClients) {
-		this.roomId = roomId;
+	public Room (String roomName, int maxClients) {
+		this.roomName = roomName;
 		this.maxClients = maxClients;
 	}
 	

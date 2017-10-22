@@ -15,15 +15,10 @@ public class Client{
 		  ServerListener serverListener = new ServerListener(inFromServer);
 		  serverListener.start();
 		  
-		  ClientListener clientListener = new ClientListener();
+		  ClientListener clientListener = new ClientListener(clientSocket);
 		  clientListener.start();
 		  
 		  while(true){
-			  DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
-			  
-			  String inputLine = clientListener.input.readLine();
-			  outToServer.writeBytes(inputLine);
-			  System.out.println(inputLine);
 		  }
 	}
 }
