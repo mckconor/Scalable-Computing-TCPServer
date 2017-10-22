@@ -15,15 +15,30 @@ public class ClientThread extends Thread {
 	private int clientNumber;
 	private String clientName;
 	
+	private int messageCount;
+	
+	//Room stuff
+	public int joinId;
+	
+	//TCD
+	private String studentNumber = "13320488";
+	
 	//Chat Functions
-	private static final String JOIN_ROOM = "join_chatroom:";
-	private static final String CHANGE_NAME = "change_name_to:";
+	private static final String JOIN_ROOM = "join_chatroom";
+	private static final String LEAVE_ROOM = "leave_chatroom";
+	private static final String CHANGE_NAME = "change_name";	//redundant, but fun!
+	private static final String CHAT = "chat";
+	private static final String KILL_SERVER = "kill_service";
+	private static final String WELCOME = "helo";
+	private static final String DISCONNECT = "disconnect";
 	
 	public ClientThread(Socket socket, int clientNumber) {
 		this.socket = socket;
 		this.clientNumber = clientNumber;
 		
-		clientName = "#" + this.clientNumber;
+		clientName = "Client#" + this.clientNumber;
+		
+		messageCount = 0;
 	}
 	
 	public void run() { 
@@ -41,23 +56,38 @@ public class ClientThread extends Thread {
 		
 		String line;
 		
-		//Welcome Client
-		WelcomeClient();
-		
+		//Accepts commands
 		while(true) {
 			try {
 				line = bufferedReader.readLine();
-				if((line == null) || line.equalsIgnoreCase("QUIT")) {
+				
+				if((line == null) || line.toLowerCase().contains(DISCONNECT.toLowerCase())) {
 					//Closing client
 					socket.close();
 					return;
 				} else if (line.toLowerCase().contains(JOIN_ROOM.toLowerCase())) {
-					JoinClient(line);
+					//Joining a room
+					JoinRoom(line);
+				} else if (line.toLowerCase().contains(LEAVE_ROOM.toLowerCase())) {
+					//Leave a room
+//					LeaveRoom();
+				} else if (line.toLowerCase().contains(KILL_SERVER.toLowerCase())) {
+					//Kill program
+					
+				} else if (line.toLowerCase().contains(CHAT.toLowerCase())) {
+					//Allow Chat
+
+				} else if (line.toLowerCase().contains(WELCOME.toLowerCase())) {
+					//Responds to HELO message
+					WelcomeClient(line);
 				} else if (line.toLowerCase().contains(CHANGE_NAME.toLowerCase())) { 
+					//Changing client name
 					ChangeClientName(line);
+				} else if (line.equals("") || line.equals("\n")) { 
+					//Do nothing
 				} else {
-					output.writeBytes(line + "\n");
-					System.out.println("FROM CLIENT " + clientName+ ": " + line);
+					output.writeBytes(clientName + ": " + line + "\n");
+					System.out.println("FROM " + clientName+ ": " + line);
 					output.flush();
 				}
 			} catch (IOException ex) {
@@ -67,16 +97,26 @@ public class ClientThread extends Thread {
 		}
 	}
 	
-	public void WelcomeClient () {
+	//Welcome Client on join
+	public void WelcomeClient (String line) {
+		String response = line + "\n"
+				+ "IP:" + Server.serverIp + "\n"
+				+ "Port:" + Server.serverPort + "\n"
+				+ "StudentID:" + studentNumber + "\n";
+		
 		try {
-			output.writeBytes("Welcome! You are Client #" + clientNumber + "\n");
+			output.writeBytes(response);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public void JoinClient (String line) throws IOException {
+	//Joins client to room if exists, else creates it
+	public void JoinRoom (String line) throws IOException {
 		String roomName = line.substring(JOIN_ROOM.length(), line.length()).trim();
+		
+		Message message = new Message (socket.getInetAddress().toString(), ""+socket.getPort(), this.clientName);
+		System.out.println(line + "\nCLIENT_IP:" + message.clientIp + "\nPORT:" + message.clientPort + "\nCLIENT_NAME" + message.clientName);
 		
 		if(roomName == null || roomName.equals("")) {
 			System.err.println("ERROR: Client " + clientName + " tried to join a null room.");
@@ -93,15 +133,35 @@ public class ClientThread extends Thread {
 			
 			if(!roomExists) {
 				//Create and Join
-				output.writeBytes("Chatroom " + roomName + " does not exist. Creating..." + "\n");
+				System.out.println("Chatroom " + roomName + " does not exist. Creating..." + "\n");
 				
-				Server.AddRoom(roomName);
-				Server.AddClientToRoom(this);
+				int portNumber = Server.serverPort + Server.rooms.size() + 1;
+				Server.AddRoom(roomName, portNumber);
+				Message serverResponse = Server.AddClientToRoom(this, roomName);
+				
+				String response = "JOINED_CHATROOM:" +roomName + "\n"
+						+ "SERVER_IP:" + serverResponse.serverIp + "\n"
+						+ "PORT:" + serverResponse.serverPort + "\n"
+						+ "ROOM_REF:" + serverResponse.roomId + "\n"
+						+ "JOIN_ID:" + serverResponse.joinId + "\n";
+				
+				output.writeBytes(response);
+			} else {
+				Message serverResponse = Server.AddClientToRoom(this, roomName);
+				
+				String response = "JOINED_CHATROOM:" +roomName + "\n"
+						+ "SERVER_IP:" + serverResponse.serverIp + "\n"
+						+ "PORT:" + serverResponse.serverPort + "\n"
+						+ "ROOM_REF:" + serverResponse.roomId + "\n"
+						+ "JOIN_ID:" + serverResponse.joinId + "\n";
+				
+				output.writeBytes(response);
 			}
 		}
 	
 	}
 	
+	//Allows client rename themselves
 	public void ChangeClientName (String line) throws IOException {
 		String nameChange = line.substring(CHANGE_NAME.length(), line.length()).trim();
 		

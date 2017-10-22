@@ -13,7 +13,7 @@ public class ServerListener extends Thread{
 		while(true) {
 			//Print
 			try {
-				System.out.println("FROM SERVER: " + serverReader.readLine());
+				System.out.println(serverReader.readLine());
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}

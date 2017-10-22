@@ -8,7 +8,7 @@ public class Client{
 		  String sentence;
 		  String modifiedSentence;
 		  
-		  Socket clientSocket = new Socket("localhost", 6789);
+		  Socket clientSocket = new Socket("localhost", 1234);
 
 		  BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 		  

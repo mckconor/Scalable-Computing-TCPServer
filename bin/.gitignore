@@ -6,3 +6,6 @@
 /Listener.class
 /ServerListener.class
 /ClientListener.class
+/ResponseBuilder.class
+/ResponseBuilder$responseTypes.class
+/Message.class

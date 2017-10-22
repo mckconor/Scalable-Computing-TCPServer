@@ -4,45 +4,65 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Server {
+	
+	public static String serverIp;
+	public static int serverPort;
 
-	private static final int NUMBER_OF_ROOMS = 1;
-	private static final int MAX_CLIENTS_PER_ROOM = 1;
+	private static String serverName;
 	
 	private static int numberOfClients;
+	public static List<ClientThread> allClients;
 	
 	public static List<Room> rooms;
 
 	public static void main(String[] args) throws IOException {
-		InitServer();
+		InitServer(args);
 		ServerFunctionality ();
 	}
 	
-	public static void InitServer () {
+	public static void InitServer (String[] args) {
+		serverIp = args[0];
+		serverPort = Integer.parseInt(args[1]);
+		
+		serverName = serverIp + ":" + serverPort;
+		
 		rooms = new ArrayList<Room>();
+		allClients = new ArrayList<ClientThread>();
 	}
 
 	public static void ServerFunctionality () throws IOException {
 		String clientMessage;
 		int serverResponse;
 		
-		ServerSocket welcomeSocket = new ServerSocket(6789);
+		ServerSocket serverSocket = new ServerSocket(serverPort);
 		
 		while(true) {
 			//Accepts connect, creates new ClientThread to handle connection
-			Socket conSocket = welcomeSocket.accept(); //New Connection
+			Socket conSocket = serverSocket.accept(); //New Connection
 			ClientThread x = new ClientThread(conSocket, numberOfClients++);
+			allClients.add(x);
 			x.start();
 		}
 	}
 	
-	public static void AddRoom (String roomName) {
+	public static void AddRoom (String roomName, int serverPort) {
 		System.out.println("Creating chatroom: " + roomName);
-		Room newRoom = new Room(roomName, 8);
+		Room newRoom = new Room(roomName, rooms.size()+1, serverPort);
 		rooms.add(newRoom);
 	}
 	
-	public static void AddClientToRoom (ClientThread client) {
-		
-		
+	public static Message AddClientToRoom (ClientThread client, String roomName) throws IOException {
+		//Find room and add to it
+		int joinId = 0; int roomId = 0;
+		for(Room room : rooms) {
+			if(room.roomName.equals(roomName)) {
+				client.joinId = room.clients.size()+1;
+				room.addClient(client);
+				joinId = room.clients.size();
+				roomId = room.roomId;
+			}
+		}
+		Message message = new Message (serverIp, ""+serverPort, serverName, ""+joinId, ""+roomId);
+		return message;
 	}
 }
