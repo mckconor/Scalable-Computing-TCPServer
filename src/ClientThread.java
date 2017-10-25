@@ -1,8 +1,10 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.Socket;
 
 public class ClientThread extends Thread {
@@ -11,14 +13,17 @@ public class ClientThread extends Thread {
 	protected InputStream input;
 	protected BufferedReader bufferedReader;
 	protected DataOutputStream output;
+	protected OutputStreamWriter outputWriter;
+	protected BufferedWriter bufferedWriter;
 	
 	private int clientNumber;
-	private String clientName;
+	public String clientName;
 	
 	private int messageCount;
 	
 	//Room stuff
 	public int joinId;
+	private boolean isInRoom;
 	
 	//TCD
 	private String studentNumber = "13320488";
@@ -39,6 +44,8 @@ public class ClientThread extends Thread {
 		clientName = "Client#" + this.clientNumber;
 		
 		messageCount = 0;
+		
+		isInRoom = false;
 	}
 	
 	public void run() { 
@@ -50,6 +57,8 @@ public class ClientThread extends Thread {
 			input = socket.getInputStream();
 			bufferedReader = new BufferedReader(new InputStreamReader(input));
 			output = new DataOutputStream(socket.getOutputStream());
+			outputWriter = new OutputStreamWriter(socket.getOutputStream());
+			bufferedWriter = new BufferedWriter(outputWriter);
 		} catch (IOException ex) {
 			return;
 		}
@@ -70,7 +79,7 @@ public class ClientThread extends Thread {
 					JoinRoom(line);
 				} else if (line.toLowerCase().contains(LEAVE_ROOM.toLowerCase())) {
 					//Leave a room
-//					LeaveRoom();
+					LeaveRoom(line);
 				} else if (line.toLowerCase().contains(KILL_SERVER.toLowerCase())) {
 					//Kill program
 					
@@ -121,6 +130,8 @@ public class ClientThread extends Thread {
 		if(roomName == null || roomName.equals("")) {
 			System.err.println("ERROR: Client " + clientName + " tried to join a null room.");
 			output.writeBytes("Cannot join a null chatroom, please enter a room name to join or create." + "\n");
+		} else if (isInRoom) {
+			output.writeBytes("Cannot join room when you're already in one! Please leave and try again.");
 		} else {
 			
 			boolean roomExists = false;
@@ -146,6 +157,7 @@ public class ClientThread extends Thread {
 						+ "JOIN_ID:" + serverResponse.joinId + "\n";
 				
 				output.writeBytes(response);
+				isInRoom = true;
 			} else {
 				Message serverResponse = Server.AddClientToRoom(this, roomName);
 				
@@ -159,6 +171,14 @@ public class ClientThread extends Thread {
 			}
 		}
 	
+	}
+	
+
+	//Allows client to leave room
+	public void LeaveRoom (String line) throws IOException {
+		Server.RemoveClientFromRoom(this);
+		output.writeBytes("Hes outta there");
+		isInRoom = false;
 	}
 	
 	//Allows client rename themselves

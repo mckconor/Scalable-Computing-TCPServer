@@ -60,9 +60,30 @@ public class Server {
 				room.addClient(client);
 				joinId = room.clients.size();
 				roomId = room.roomId;
+				
+				//Print join message
+				for(ClientThread x : room.clients) {
+					x.output.writeBytes(client.clientName + " has joined the chatroom: " + room.roomName + "\n");
+				}
 			}
 		}
 		Message message = new Message (serverIp, ""+serverPort, serverName, ""+joinId, ""+roomId);
+		
+		return message;
+	}
+	
+	public static Message RemoveClientFromRoom (ClientThread client) throws IOException {
+		for(Room room: rooms) {
+			if(room.clients.contains(client)) {
+				room.clients.remove(client);
+				
+				//Print join message
+				for(ClientThread x : room.clients) {
+					x.output.writeBytes(client.clientName + " has left the chatroom: " + room.roomName + "\n");
+				}
+			}
+		}
+		Message message = new Message (serverIp, ""+serverPort, serverName, "", "");
 		return message;
 	}
 }
