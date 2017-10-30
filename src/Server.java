@@ -3,17 +3,20 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.omg.CosNaming.NamingContextExtPackage.StringNameHelper;
+
 public class Server {
 	
 	public static String serverIp;
 	public static int serverPort;
-
 	private static String serverName;
 	
 	private static int numberOfClients;
 	public static List<ClientThread> allClients;
-	
 	public static List<Room> rooms;
+	
+	//TCD
+	public static String studentNumber = "13320488";
 
 	public static void main(String[] args) throws IOException {
 		InitServer(args);
@@ -45,13 +48,14 @@ public class Server {
 		}
 	}
 	
-	public static void AddRoom (String roomName, int serverPort) {
+	public static Room AddRoom (String roomName, int serverPort) {
 		System.out.println("Creating chatroom: " + roomName);
 		Room newRoom = new Room(roomName, rooms.size()+1, serverPort);
 		rooms.add(newRoom);
+		return newRoom;
 	}
 	
-	public static Message AddClientToRoom (ClientThread client, String roomName) throws IOException {
+	public static int AddClientToRoom (ClientThread client, String roomName) throws IOException {
 		//Find room and add to it
 		int joinId = 0; int roomId = 0;
 		for(Room room : rooms) {
@@ -67,23 +71,48 @@ public class Server {
 				}
 			}
 		}
-		Message message = new Message (serverIp, ""+serverPort, serverName, ""+joinId, ""+roomId);
-		
-		return message;
+		return joinId;
 	}
 	
-	public static Message RemoveClientFromRoom (ClientThread client) throws IOException {
+	public static String RemoveClientFromRoom (ClientThread client) throws IOException {
+		String roomName = "";
 		for(Room room: rooms) {
 			if(room.clients.contains(client)) {
+				roomName = room.roomName;
 				room.clients.remove(client);
 				
-				//Print join message
+				//Print leave message to remaining clients
 				for(ClientThread x : room.clients) {
 					x.output.writeBytes(client.clientName + " has left the chatroom: " + room.roomName + "\n");
 				}
 			}
 		}
-		Message message = new Message (serverIp, ""+serverPort, serverName, "", "");
-		return message;
+		return roomName;
+	}
+	
+	public static void KillClient (ClientThread client) {
+		for(Room x : rooms) {
+			if(x.roomId == client.roomId) {
+				x.clients.remove(client);
+			}
+		}
+		allClients.remove(client);
+	}
+	
+	public static void MessageToAllInRoom (ClientThread client, String message) throws IOException {
+		Room chatRoom = null;
+		for(Room x : rooms) {
+			if(x.roomId == client.roomId) {
+				chatRoom = x;
+			}
+		}
+		
+		String fullMessage = " CHAT: " + chatRoom.roomId + "\r\n" + 
+				"CLIENT_NAME: " + client.clientName + "\r\n" + 
+				"MESSAGE: " + message;
+		
+		for(ClientThread x : chatRoom.clients) {
+			x.outputWriter.write(fullMessage);
+		}
 	}
 }
