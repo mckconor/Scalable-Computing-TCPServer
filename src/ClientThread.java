@@ -77,10 +77,10 @@ public class ClientThread extends Thread {
 
 				} else if (line.toLowerCase().contains(CHAT.toLowerCase())) {
 					// Allow Chat
-					while(!line.contains("MESSAGE")) {
+					while(line != null || line.equals("")) { 
+						if(line.toLowerCase().contains("message")) { ChatWithRoom(line); line = null; } 
 						line = bufferedReader.readLine();
 					}
-					ChatWithRoom(line);
 				} else if (line.toLowerCase().contains(WELCOME.toLowerCase())) {
 					// Responds to HELO message
 					WelcomeClient(line);
@@ -103,12 +103,12 @@ public class ClientThread extends Thread {
 	//Parse Message
 	public String ParseMessage (String line) {
 		String messageFlag = "MESSAGE";
-		if(!line.contains(messageFlag)) {
+		if(!line.toUpperCase().contains(messageFlag)) {
 			//Get outta here
 			return null;
 		}
 		
-		int messageLocation = line.indexOf(messageFlag);
+		int messageLocation = line.toUpperCase().indexOf(messageFlag);
 		String restOfString = line.substring(messageLocation, line.length());
 		int nextBreakLine = restOfString.indexOf("\\n\\n");
 		String messageLine = restOfString.substring(messageFlag.length()+1, nextBreakLine);

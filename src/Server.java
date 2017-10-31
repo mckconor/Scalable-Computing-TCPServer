@@ -112,7 +112,7 @@ public class Server {
 				"MESSAGE: " + message;
 		
 		for(ClientThread x : chatRoom.clients) {
-			x.outputWriter.write(fullMessage);
+			x.output.writeBytes(fullMessage);
 		}
 	}
 }
