@@ -60,7 +60,7 @@ public class ClientThread extends Thread {
 		// Accepts commands
 		while (true) {
 			try {
-				line = bufferedReader.readLine();
+				line = ReadInput(); //bufferedReader.readLine();
 
 				if ((line == null) || line.toLowerCase().contains(DISCONNECT.toLowerCase())) {
 					//Kill Client
@@ -100,6 +100,29 @@ public class ClientThread extends Thread {
 				return;
 			}
 		}
+	}
+	
+	//Read in from client
+	public String ReadInput () {
+		InputStreamReader inputReader = new InputStreamReader(input);
+		char[] buffer = new char[256];
+		char[] result = null;
+		int read = 0;
+		
+		try {
+			read = inputReader.read(buffer, 0, buffer.length);
+			if(read > 0) {
+				result = new char[read];
+				System.arraycopy(buffer, 0, result, 0, read);
+				return new String(result);
+			} else {
+				return null;
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 	//Parse Message
