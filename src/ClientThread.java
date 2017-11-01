@@ -89,9 +89,11 @@ public class ClientThread extends Thread {
 					ChangeClientName(line);
 				} else if (line.equals("") || line.equals("\n")) {
 					// Do nothing
+					System.out.println("FROM " + clientName + ": " + line);
 				} else {
 					System.out.println("FROM " + clientName + ": " + line);
-					output.flush();
+//					"ERROR_CODE:{}\nERROR_DESCRIPTION:{}\n"
+					bufferedWriter.write("ERROR_CODE: 123\nERROR_DESCRIPTION: Received other input");
 				}
 			} catch (IOException ex) {
 				ex.printStackTrace();
@@ -118,8 +120,10 @@ public class ClientThread extends Thread {
 
 	// Welcome Client on join
 	public void WelcomeClient(String line) {
-		String response = line + "\n" + "IP:" + Server.serverIp + "\n" + "Port:" + Server.serverPort + "\n"
-				+ "StudentID:" + Server.studentNumber + "\n";
+		String response = line 
+				+ "\n" + "IP:" + Server.serverIp 
+				+ "\n" + "Port:" + Server.serverPort 
+				+ "\n" + "StudentID:" + Server.studentNumber + "\n";
 
 		try {
 			bufferedWriter.write(response);
@@ -132,6 +136,10 @@ public class ClientThread extends Thread {
 	// Joins client to room if exists, else creates it
 	public void JoinRoom(String line) throws IOException {
 		String roomName = line.substring(JOIN_ROOM.length(), line.length()).trim();
+		StringBuilder sb = new StringBuilder();
+		sb.append(roomName);
+		sb.deleteCharAt(roomName.indexOf(':'));
+		roomName = sb.toString();
 
 		System.out.println(line + "\nCLIENT_IP:" + socket.getInetAddress() + "\nPORT:" + socket.getPort()
 				+ "\nCLIENT_NAME" + clientName);
@@ -162,18 +170,26 @@ public class ClientThread extends Thread {
 				roomId = room.roomId;
 				joinId = Server.AddClientToRoom(this, roomName);
 
-				String response = "JOINED_CHATROOM:" + roomName + "\n" + "SERVER_IP:" + Server.serverIp + "\n" + "PORT:"
-						+ Server.serverPort + "\n" + "ROOM_REF:" + roomId + "\n" + "JOIN_ID:" + joinId + "\n";
+				String response = "JOINED_CHATROOM:" + roomName 
+						+ "\n" + "SERVER_IP: " + Server.serverIp 
+						+ "\n" + "PORT: " + Server.serverPort 
+						+ "\n" + "ROOM_REF: " + roomId 
+						+ "\n" + "JOIN_ID: " + joinId + "\n";
 
+				System.out.println("-Room created- \n" + response);
 				bufferedWriter.write(response);
 				bufferedWriter.flush();
 				isInRoom = true;
 			} else {
 				joinId = Server.AddClientToRoom(this, roomName);
 
-				String response = "JOINED_CHATROOM:" + roomName + "\n" + "SERVER_IP:" + Server.serverIp + "\n" + "PORT:"
-						+ Server.serverPort + "\n" + "ROOM_REF:" + roomId + "\n" + "JOIN_ID:" + joinId + "\n";
+				String response = "JOINED_CHATROOM:" + roomName 
+						+ "\n" + "SERVER_IP: " + Server.serverIp 
+						+ "\n" + "PORT: " + Server.serverPort 
+						+ "\n" + "ROOM_REF: " + roomId 
+						+ "\n" + "JOIN_ID: " + joinId + "\n";
 
+				System.out.println("-Room exists- \n" + response);
 				bufferedWriter.write(response);
 				bufferedWriter.flush();
 			}

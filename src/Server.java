@@ -67,7 +67,7 @@ public class Server {
 				
 				//Print join message
 				for(ClientThread x : room.clients) {
-					x.output.writeBytes(client.clientName + " has joined the chatroom: " + room.roomName + "\n");
+//					x.output.writeBytes(client.clientName + " has joined the chatroom: " + room.roomName + "\n");
 				}
 			}
 		}
