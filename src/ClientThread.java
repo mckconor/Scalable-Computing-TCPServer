@@ -129,7 +129,6 @@ public class ClientThread extends Thread {
 	public String ParseMessage (String line) {
 		String messageFlag = "MESSAGE";
 		if(!line.toUpperCase().contains(messageFlag)) {
-			//Get outta here
 			return null;
 		}
 		
@@ -140,10 +139,36 @@ public class ClientThread extends Thread {
 		
 		return messageLine;
 	}
+	
+	//Parse Message Component
+	public String ParseMessageComponent (String component, String line) {
+		if(!line.toLowerCase().contains(component.toLowerCase())) {
+			//Get outta here scoob
+			return null;
+		}
+		
+		int componentLocation = line.toLowerCase().indexOf(component.toLowerCase());
+		String restOfString = line.substring(componentLocation, line.length());
+		int nextBreakLine = restOfString.indexOf("\n");
+		String messageComponent = restOfString.substring(component.length()+1, nextBreakLine);
+		
+		return messageComponent;
+	}
+	
+	//Clean up String
+	public String CleanUpCharacters (char character, String line) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(line);
+		if(line.indexOf(character) > -1) {
+			sb.deleteCharAt(line.indexOf(character));
+		}
+		
+		return sb.toString();
+	}
 
 	// Welcome Client on join
 	public void WelcomeClient(String line) {
-		String response = line 
+		String response = WELCOME + ":" + CleanUpCharacters(':', ParseMessageComponent(WELCOME, line)) 
 				+ "\n" + "IP:" + Server.serverIp 
 				+ "\n" + "Port:" + Server.serverPort 
 				+ "\n" + "StudentID:" + Server.studentNumber + "\n";
@@ -158,11 +183,7 @@ public class ClientThread extends Thread {
 
 	// Joins client to room if exists, else creates it
 	public void JoinRoom(String line) throws IOException {
-		String roomName = line.substring(JOIN_ROOM.length(), line.length()).trim();
-		StringBuilder sb = new StringBuilder();
-		sb.append(roomName);
-		sb.deleteCharAt(roomName.indexOf(':'));
-		roomName = sb.toString();
+		String roomName = CleanUpCharacters(':', ParseMessageComponent(JOIN_ROOM, line)).trim(); //line.substring(JOIN_ROOM.length(), line.length()).trim();
 
 		System.out.println(line + "\nCLIENT_IP:" + socket.getInetAddress() + "\nPORT:" + socket.getPort()
 				+ "\nCLIENT_NAME" + clientName);
@@ -199,7 +220,12 @@ public class ClientThread extends Thread {
 						+ "\n" + "ROOM_REF: " + roomId 
 						+ "\n" + "JOIN_ID: " + joinId + "\n";
 
+				//Server out
 				System.out.println("-Room created- \n" + response);
+				
+				//Join message
+				Server.BroadcastToAllOthersInRoom(this, this.clientName + " has joined the chatroom.\n");
+				
 				bufferedWriter.write(response);
 				bufferedWriter.flush();
 				isInRoom = true;
@@ -212,9 +238,15 @@ public class ClientThread extends Thread {
 						+ "\n" + "ROOM_REF: " + roomId 
 						+ "\n" + "JOIN_ID: " + joinId + "\n";
 
+				//Server out
 				System.out.println("-Room exists- \n" + response);
+
+				//Join message
+				Server.BroadcastToAllOthersInRoom(this, this.clientName + " has joined the chatroom.\n");
+				
 				bufferedWriter.write(response);
 				bufferedWriter.flush();
+				isInRoom = true;
 			}
 		}
 
@@ -263,6 +295,6 @@ public class ClientThread extends Thread {
 	
 	public void ChatWithRoom (String line) throws IOException {
 		String message = ParseMessage(line);
-		Server.MessageToAllInRoom(this, message);
+		Server.ChatMessageToAllInRoom(this, message);
 	}
 }

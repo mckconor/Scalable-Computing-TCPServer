@@ -99,7 +99,38 @@ public class Server {
 		allClients.remove(client);
 	}
 	
-	public static void MessageToAllInRoom (ClientThread client, String message) throws IOException {
+	public static void BroadcastToAllInRoom (ClientThread client, String message) throws IOException {
+		Room chatRoom = null;
+		for(Room x : rooms) {
+			if(x.roomId == client.roomId) {
+				chatRoom = x;
+			}
+		}
+		
+		for(ClientThread x : chatRoom.clients) {
+			x.bufferedWriter.write(message);
+			x.bufferedWriter.flush();
+		}
+	}
+	
+	public static void BroadcastToAllOthersInRoom (ClientThread client, String message) throws IOException {
+		//For not broadcasting to itself
+		Room chatRoom = null;
+		for(Room x : rooms) {
+			if(x.roomId == client.roomId) {
+				chatRoom = x;
+			}
+		}
+		
+		for(ClientThread x : chatRoom.clients) {
+			if(!client.equals(x)) {
+				x.bufferedWriter.write(message);
+				x.bufferedWriter.flush();
+			}
+		}
+	}
+	
+	public static void ChatMessageToAllInRoom (ClientThread client, String message) throws IOException {
 		Room chatRoom = null;
 		for(Room x : rooms) {
 			if(x.roomId == client.roomId) {
@@ -112,7 +143,8 @@ public class Server {
 				"MESSAGE: " + message;
 		
 		for(ClientThread x : chatRoom.clients) {
-			x.output.writeBytes(fullMessage);
+			x.bufferedWriter.write(fullMessage);
+			x.bufferedWriter.flush();
 		}
 	}
 }
