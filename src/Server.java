@@ -78,13 +78,9 @@ public class Server {
 		String roomName = "";
 		for(Room room: rooms) {
 			if(room.clients.contains(client)) {
+				ChatMessageToAllInRoom(client, client.clientName + " has left the chatroom.");
 				roomName = room.roomName;
 				room.clients.remove(client);
-				
-				//Print leave message to remaining clients
-				for(ClientThread x : room.clients) {
-					x.output.writeBytes(client.clientName + " has left the chatroom: " + room.roomName + "\n");
-				}
 			}
 		}
 		return roomName;
@@ -138,9 +134,11 @@ public class Server {
 			}
 		}
 		
-		String fullMessage = " CHAT: " + chatRoom.roomId + "\r\n" + 
-				"CLIENT_NAME: " + client.clientName + "\r\n" + 
+		String fullMessage = "CHAT: " + chatRoom.roomId + "\n" + 
+				"CLIENT_NAME: " + client.clientName + "\n" + 
 				"MESSAGE: " + message;
+		
+		System.out.println(fullMessage);
 		
 		for(ClientThread x : chatRoom.clients) {
 			x.bufferedWriter.write(fullMessage);

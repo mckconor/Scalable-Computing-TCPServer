@@ -36,7 +36,7 @@ public class ClientThread extends Thread {
 		this.socket = socket;
 		this.clientNumber = clientNumber;
 
-		clientName = "Client#" + this.clientNumber;
+		clientName = "client" + this.clientNumber;
 		isInRoom = false;
 	}
 
@@ -191,7 +191,9 @@ public class ClientThread extends Thread {
 	// Joins client to room if exists, else creates it
 	public void JoinRoom(String line) throws IOException {
 		String roomName = CleanUpCharacters(':', ParseMessageComponent(JOIN_ROOM, line)).trim(); //line.substring(JOIN_ROOM.length(), line.length()).trim();
-
+		String clientNameIn = CleanUpCharacters(':', ParseMessageComponent("CLIENT_NAME", line)).trim();
+		this.clientName = clientNameIn;
+		
 		System.out.println(line + "\nCLIENT_IP:" + socket.getInetAddress() + "\nPORT:" + socket.getPort()
 				+ "\nCLIENT_NAME" + clientName);
 
@@ -230,11 +232,12 @@ public class ClientThread extends Thread {
 				//Server out
 				System.out.println("-Room created- \n" + response);
 				
-				//Join message
-				Server.BroadcastToAllOthersInRoom(this, this.clientName + " has joined the chatroom.\n");
-				
 				bufferedWriter.write(response);
 				bufferedWriter.flush();
+				
+				//Join message
+				Server.ChatMessageToAllInRoom(this, this.clientName + " has joined the chatroom.\n");
+				
 				isInRoom = true;
 			} else {
 				joinId = Server.AddClientToRoom(this, roomName);
