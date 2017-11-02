@@ -23,8 +23,8 @@ public class Server {
 		ServerFunctionality ();
 	}
 	
-	public static void InitServer (String[] args) {
-		serverIp = args[0];
+	public static void InitServer (String[] args) throws UnknownHostException {
+		serverIp = InetAddress.getLocalHost().getHostAddress(); //args[0];
 		serverPort = Integer.parseInt(args[1]);
 		
 		serverName = serverIp + ":" + serverPort;

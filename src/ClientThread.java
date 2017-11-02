@@ -60,8 +60,9 @@ public class ClientThread extends Thread {
 		// Accepts commands
 		while (true) {
 			try {
-				line = ReadInput(); //bufferedReader.readLine();
-
+				line = /* bufferedReader.readLine(); */ ReadInput(); 
+				System.out.println("Input from client: " + this.clientName + ": " + line);
+				
 				if ((line == null) || line.toLowerCase().contains(DISCONNECT.toLowerCase())) {
 					//Kill Client
 					DisconnectClient();
@@ -89,9 +90,10 @@ public class ClientThread extends Thread {
 					ChangeClientName(line);
 				} else if (line.equals("") || line.equals("\n")) {
 					// Do nothing
-					System.out.println("FROM " + clientName + ": " + line);
+//					System.out.println("FROM " + clientName + ": " + line);
+					bufferedWriter.write("ERROR_CODE: 124\nERROR_DESCRIPTION: Received empty input");
 				} else {
-					System.out.println("FROM " + clientName + ": " + line);
+//					System.out.println("FROM " + clientName + ": " + line);
 //					"ERROR_CODE:{}\nERROR_DESCRIPTION:{}\n"
 					bufferedWriter.write("ERROR_CODE: 123\nERROR_DESCRIPTION: Received other input");
 				}
@@ -104,7 +106,7 @@ public class ClientThread extends Thread {
 	
 	//Read in from client
 	public String ReadInput () {
-		InputStreamReader inputReader = new InputStreamReader(input);
+		InputStreamReader inputReader = new InputStreamReader(this.input);
 		char[] buffer = new char[256];
 		char[] result = null;
 		int read = 0;
@@ -147,10 +149,15 @@ public class ClientThread extends Thread {
 			return null;
 		}
 		
+		String messageComponent = "";
 		int componentLocation = line.toLowerCase().indexOf(component.toLowerCase());
 		String restOfString = line.substring(componentLocation, line.length());
 		int nextBreakLine = restOfString.indexOf("\n");
-		String messageComponent = restOfString.substring(component.length()+1, nextBreakLine);
+		if(nextBreakLine < 0){
+			messageComponent = restOfString.substring(component.length()+1, restOfString.length());
+		} else {
+			messageComponent = restOfString.substring(component.length()+1, nextBreakLine);
+		}
 		
 		return messageComponent;
 	}
@@ -168,7 +175,7 @@ public class ClientThread extends Thread {
 
 	// Welcome Client on join
 	public void WelcomeClient(String line) {
-		String response = WELCOME + ":" + CleanUpCharacters(':', ParseMessageComponent(WELCOME, line)) 
+		String response = WELCOME.toUpperCase() + " " + ParseMessageComponent(WELCOME, line)
 				+ "\n" + "IP:" + Server.serverIp 
 				+ "\n" + "Port:" + Server.serverPort 
 				+ "\n" + "StudentID:" + Server.studentNumber + "\n";
