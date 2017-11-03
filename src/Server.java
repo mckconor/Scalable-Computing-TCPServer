@@ -53,12 +53,16 @@ public class Server {
 	
 	public static void Shutdown () throws IOException {
 		alive = false;
+		
+		for(ClientThread x : allClients) {
+			x.socket.close();
+		}
+		
 		for(Room x: rooms){
 			for(ClientThread y: x.clients){
 				y.socket.close();
 			}
 		}
-		
 		serverSocket.close();
 		System.exit(0);
 	}
