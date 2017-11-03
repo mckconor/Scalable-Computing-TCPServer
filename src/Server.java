@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.omg.CosNaming.NamingContextExtPackage.StringNameHelper;
-
 public class Server {
 	
 	public static String serverIp;
