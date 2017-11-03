@@ -2,4 +2,4 @@
 # To start the application
 
 cd src
-java Server 1234
+java Server $0
