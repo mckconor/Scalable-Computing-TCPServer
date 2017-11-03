@@ -5,14 +5,14 @@ public class Room {
 
 	String roomName;
 	int maxClients;
-	int roomId;
+	String roomId;
 	
 	String roomIpAddress;
-	int roomPort;
+	String roomPort;
 	
 	List<ClientThread> clients;
 		
-	public Room (String roomName, int roomId, int roomPort) {
+	public Room (String roomName, String roomId, String roomPort) {
 		this.roomName = roomName;
 		this.roomPort = roomPort;
 		this.roomId = roomId;

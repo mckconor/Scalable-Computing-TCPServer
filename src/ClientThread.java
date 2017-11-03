@@ -19,7 +19,7 @@ public class ClientThread extends Thread {
 	// Chat Functions
 	private static final String JOIN_ROOM = "join_chatroom";
 	private static final String LEAVE_ROOM = "leave_chatroom";
-	private static final String CHANGE_NAME = "change_name"; // redundant, but fun!
+	private static final String CHANGE_NAME = "change_name";
 	private static final String CHAT = "chat";
 	private static final String KILL_SERVER = "kill_service";
 	private static final String WELCOME = "helo";
@@ -29,15 +29,13 @@ public class ClientThread extends Thread {
 	public String clientName;
 
 	// Room stuff
-	public int joinId, roomId;
-	private boolean isInRoom;
+	public String joinId, roomId;
 
 	public ClientThread(Socket socket, int clientNumber) {
 		this.socket = socket;
 		this.clientNumber = clientNumber;
 
 		clientName = "client" + this.clientNumber;
-		isInRoom = false;
 	}
 
 	public void run() {
@@ -61,7 +59,7 @@ public class ClientThread extends Thread {
 		while (true) {
 			try {
 				line = /* bufferedReader.readLine(); */ ReadInput(); 
-				System.out.println("Input from client: " + this.clientName + ": " + line);
+				System.out.println(this.clientName + ": " + line);
 				
 				if ((line == null) || line.toLowerCase().contains(DISCONNECT.toLowerCase())) {
 					//Kill Client
@@ -75,13 +73,10 @@ public class ClientThread extends Thread {
 					LeaveRoom(line);
 				} else if (line.toLowerCase().contains(KILL_SERVER.toLowerCase())) {
 					// Kill program
-
+					Server.Shutdown();
 				} else if (line.toLowerCase().contains(CHAT.toLowerCase())) {
 					// Allow Chat
-					while(line != null || line.equals("")) { 
-						if(line.toLowerCase().contains("message")) { ChatWithRoom(line); line = null; } 
-						line = bufferedReader.readLine();
-					}
+					Server.ChatMessageToAllInRoom(this, CleanUpCharacters(':', ParseMessageComponent("MESSAGE", line)+"\n"), CleanUpCharacters(':', ParseMessageComponent("CHAT", line)));
 				} else if (line.toLowerCase().contains(WELCOME.toLowerCase())) {
 					// Responds to HELO message
 					WelcomeClient(line);
@@ -89,12 +84,10 @@ public class ClientThread extends Thread {
 					// Changing client name
 					ChangeClientName(line);
 				} else if (line.equals("") || line.equals("\n")) {
-					// Do nothing
-//					System.out.println("FROM " + clientName + ": " + line);
+					System.out.println("ERROR_CODE: 124\nERROR_DESCRIPTION: Received empty input");
 					bufferedWriter.write("ERROR_CODE: 124\nERROR_DESCRIPTION: Received empty input");
 				} else {
-//					System.out.println("FROM " + clientName + ": " + line);
-//					"ERROR_CODE:{}\nERROR_DESCRIPTION:{}\n"
+					System.out.println("ERROR_CODE: 123\nERROR_DESCRIPTION: Received other input");
 					bufferedWriter.write("ERROR_CODE: 123\nERROR_DESCRIPTION: Received other input");
 				}
 			} catch (IOException ex) {
@@ -107,7 +100,7 @@ public class ClientThread extends Thread {
 	//Read in from client
 	public String ReadInput () {
 		InputStreamReader inputReader = new InputStreamReader(this.input);
-		char[] buffer = new char[256];
+		char[] buffer = new char[4096];
 		char[] result = null;
 		int read = 0;
 		
@@ -145,7 +138,6 @@ public class ClientThread extends Thread {
 	//Parse Message Component
 	public String ParseMessageComponent (String component, String line) {
 		if(!line.toLowerCase().contains(component.toLowerCase())) {
-			//Get outta here scoob
 			return null;
 		}
 		
@@ -166,9 +158,10 @@ public class ClientThread extends Thread {
 	public String CleanUpCharacters (char character, String line) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(line);
-		if(line.indexOf(character) > -1) {
+		try {
+//		if(line.indexOf(character) > -1) {
 			sb.deleteCharAt(line.indexOf(character));
-		}
+		} catch (Exception ex) {}
 		
 		return sb.toString();
 	}
@@ -200,11 +193,9 @@ public class ClientThread extends Thread {
 		if (roomName == null || roomName.equals("")) {
 			System.err.println("ERROR: Client " + clientName + " tried to join a null room.");
 			output.writeBytes("Cannot join a null chatroom, please enter a room name to join or create." + "\n");
-		} else if (isInRoom) {
-			output.writeBytes("Cannot join room when you're already in one! Please leave and try again.");
 		} else {
 
-			roomId = 0;
+			roomId = "";
 			boolean roomExists = false;
 			for (Room x : Server.rooms) {
 				if (x.roomName.equals(roomName)) {
@@ -218,7 +209,7 @@ public class ClientThread extends Thread {
 				// Create and Join
 				System.out.println("Chatroom " + roomName + " does not exist. Creating..." + "\n");
 
-				int portNumber = Server.serverPort + Server.rooms.size() + 1;
+				String portNumber = CleanUpCharacters(':', ParseMessageComponent("PORT", line)); //"" + Server.serverPort + Server.rooms.size() + 1;
 				Room room = Server.AddRoom(roomName, portNumber);
 				roomId = room.roomId;
 				joinId = Server.AddClientToRoom(this, roomName);
@@ -236,9 +227,7 @@ public class ClientThread extends Thread {
 				bufferedWriter.flush();
 				
 				//Join message
-				Server.ChatMessageToAllInRoom(this, this.clientName + " has joined the chatroom.\n");
-				
-				isInRoom = true;
+				Server.ChatMessageToAllInRoom(this, this.clientName + " has joined the chatroom.\n", roomId);
 			} else {
 				joinId = Server.AddClientToRoom(this, roomName);
 
@@ -250,13 +239,12 @@ public class ClientThread extends Thread {
 
 				//Server out
 				System.out.println("-Room exists- \n" + response);
-
-				//Join message
-				Server.BroadcastToAllOthersInRoom(this, this.clientName + " has joined the chatroom.\n");
 				
 				bufferedWriter.write(response);
 				bufferedWriter.flush();
-				isInRoom = true;
+
+				//Join message
+				Server.ChatMessageToAllInRoom(this, this.clientName + " has joined the chatroom.\n", roomId);
 			}
 		}
 
@@ -264,14 +252,15 @@ public class ClientThread extends Thread {
 
 	// Allows client to leave room
 	public void LeaveRoom(String line) throws IOException {
-		String roomName = Server.RemoveClientFromRoom(this);
-
-		String response = "LEFT_CHATROOM:" + roomName + "\n" + "JOIN_ID:" + joinId + "\n";
+		String roomRef = CleanUpCharacters(':', ParseMessageComponent(LEAVE_ROOM, line));
+		String response = "LEFT_CHATROOM:" + roomRef + "\n" + "JOIN_ID:" + joinId + "\n";
 
 		bufferedWriter.write(response);
 		bufferedWriter.flush();
 
-		isInRoom = false;
+		System.out.println("-Leave Room- \n" + response);
+		
+		String roomName = Server.RemoveClientFromRoom(this, roomRef);
 	}
 
 	// Allows client rename themselves
@@ -290,6 +279,8 @@ public class ClientThread extends Thread {
 
 	// Kills client connection
 	public void DisconnectClient() throws IOException {
+		Server.DisconnectClient(this);
+		
 		bufferedWriter.flush();
 		bufferedReader.close();
 		output.flush();
@@ -299,12 +290,6 @@ public class ClientThread extends Thread {
 		input.close();
 		
 		socket.close();
-		Server.KillClient(this);
-		System.out.println("clientDisconnected");
-	}
-	
-	public void ChatWithRoom (String line) throws IOException {
-		String message = ParseMessage(line);
-		Server.ChatMessageToAllInRoom(this, message);
+		System.out.println(this.clientName + "client Disconnected");
 	}
 }
