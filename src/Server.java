@@ -28,8 +28,8 @@ public class Server {
 	public static void InitServer (String[] args) throws UnknownHostException {
 		System.out.println("Server running...");
 		
-		serverIp = InetAddress.getLocalHost().getHostAddress(); //args[0];
-		serverPort = Integer.parseInt(args[1]);
+		serverIp = InetAddress.getLocalHost().getHostAddress();
+		serverPort = Integer.parseInt(args[0]);
 		
 		serverName = serverIp + ":" + serverPort;
 		
