@@ -166,10 +166,12 @@ public class Server {
 		
 		System.out.println(fullMessage);
 		
-		for(ClientThread x : chatRoom.clients) {
-			x.bufferedWriter.write(fullMessage);
-			x.bufferedWriter.flush();
-		}
+		try{
+			for(ClientThread x : chatRoom.clients) {
+				x.bufferedWriter.write(fullMessage);
+				x.bufferedWriter.flush();
+			}
+		} catch (Exception ex) { System.err.println("Socket closed"); };
 	}
 	
 	public static void DisconnectClient(ClientThread client) throws IOException {
