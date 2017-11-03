@@ -58,8 +58,8 @@ public class ClientThread extends Thread {
 		// Accepts commands
 		while (true) {
 			try {
-				line = /* bufferedReader.readLine(); */ ReadInput(); 
-				System.out.println(this.clientName + ": " + line);
+				line = ReadInput(); 
+				System.out.println("Received from " + this.clientName + ":\n" + line);
 				
 				if ((line == null) || line.toLowerCase().contains(DISCONNECT.toLowerCase())) {
 					//Kill Client
@@ -120,21 +120,6 @@ public class ClientThread extends Thread {
 		return null;
 	}
 	
-	//Parse Message
-	public String ParseMessage (String line) {
-		String messageFlag = "MESSAGE";
-		if(!line.toUpperCase().contains(messageFlag)) {
-			return null;
-		}
-		
-		int messageLocation = line.toUpperCase().indexOf(messageFlag);
-		String restOfString = line.substring(messageLocation, line.length());
-		int nextBreakLine = restOfString.indexOf("\\n\\n");
-		String messageLine = restOfString.substring(messageFlag.length()+1, nextBreakLine);
-		
-		return messageLine;
-	}
-	
 	//Parse Message Component
 	public String ParseMessageComponent (String component, String line) {
 		if(!line.toLowerCase().contains(component.toLowerCase())) {
@@ -159,7 +144,6 @@ public class ClientThread extends Thread {
 		StringBuilder sb = new StringBuilder();
 		sb.append(line);
 		try {
-//		if(line.indexOf(character) > -1) {
 			sb.deleteCharAt(line.indexOf(character));
 		} catch (Exception ex) {}
 		
@@ -260,10 +244,10 @@ public class ClientThread extends Thread {
 
 		System.out.println("-Leave Room- \n" + response);
 		
-		String roomName = Server.RemoveClientFromRoom(this, roomRef);
+		Server.RemoveClientFromRoom(this, roomRef);
 	}
 
-	// Allows client rename themselves
+	// Allows client rename themselves --DEPRECATED
 	public void ChangeClientName(String line) throws IOException {
 		String nameChange = line.substring(CHANGE_NAME.length(), line.length()).trim();
 

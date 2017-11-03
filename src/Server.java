@@ -26,6 +26,8 @@ public class Server {
 	}
 	
 	public static void InitServer (String[] args) throws UnknownHostException {
+		System.out.println("Server running...");
+		
 		serverIp = InetAddress.getLocalHost().getHostAddress(); //args[0];
 		serverPort = Integer.parseInt(args[1]);
 		
@@ -165,7 +167,6 @@ public class Server {
 		System.out.println(fullMessage);
 		
 		for(ClientThread x : chatRoom.clients) {
-//			System.out.println(x.clientName + " sees:\n " + fullMessage);
 			x.bufferedWriter.write(fullMessage);
 			x.bufferedWriter.flush();
 		}
@@ -175,13 +176,11 @@ public class Server {
 		List<Room> clientRooms = new ArrayList<Room>();
 		for(Room x : rooms) {
 			if(x.clients.contains(client)) {
-//				RemoveClientFromRoom(client, x.roomId);
 				clientRooms.add(x);
 			}
 		}
 
 		Collections.sort(clientRooms, Server.Comparators.ref);
-		
 		for(Room x : rooms){
 			if(x.clients.contains(client)) {
 				RemoveClientFromRoom(client, x.roomId);
